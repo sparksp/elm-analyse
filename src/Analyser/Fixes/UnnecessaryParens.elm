@@ -47,7 +47,7 @@ fixContent range content =
                     |> List.head
                     |> Maybe.withDefault ""
                     |> String.length
-                    |> flip (-) 2
+                    |> (\a -> a - 2)
                 )
             else if end.column == -1 then
                 ( end.row - 2
@@ -56,7 +56,7 @@ fixContent range content =
                     |> List.head
                     |> Maybe.withDefault ""
                     |> String.length
-                    |> flip (-) 2
+                    |> (\a -> a - 2)
                 )
             else
                 ( end.row, end.column - 1 )

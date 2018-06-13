@@ -4,7 +4,7 @@ import Analyser.CodeBase as CodeBase exposing (CodeBase)
 import Analyser.Configuration as Configuration exposing (Configuration)
 import Analyser.ContextLoader as ContextLoader exposing (Context)
 import Analyser.DependencyLoadingStage as DependencyLoadingStage
-import Analyser.FileWatch as FileWatch exposing (FileChange(Remove, Update))
+import Analyser.FileWatch as FileWatch exposing (FileChange(..))
 import Analyser.Files.Types exposing (LoadedSourceFile)
 import Analyser.Fixer as Fixer
 import Analyser.Messages.Util as Messages
@@ -15,7 +15,7 @@ import Analyser.State.Dependencies
 import AnalyserPorts
 import Inspection
 import Json.Encode exposing (Value)
-import Platform exposing (programWithFlags)
+import Platform exposing (worker)
 import Registry exposing (Registry)
 import Time
 import Util.Logger as Logger
@@ -60,7 +60,7 @@ type alias Flags =
 
 main : Program Flags Model Msg
 main =
-    programWithFlags { init = init, update = update, subscriptions = subscriptions }
+    worker { init = init, update = update, subscriptions = subscriptions }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -227,7 +227,7 @@ handleNextStep (( model, cmds ) as input) =
                     case Fixer.init taskId newState of
                         Nothing ->
                             ( { model | state = newState }
-                            , Logger.info ("Could not fix message: '" ++ toString taskId ++ "'.")
+                            , Logger.info ("Could not fix message: '" ++ String.fromInt taskId ++ "'.")
                             )
 
                         Just ( fixerModel, fixerCmds, newState2 ) ->
@@ -268,7 +268,7 @@ isSourceFileIncluded : Configuration -> LoadedSourceFile -> Bool
 isSourceFileIncluded configuration =
     Tuple.first
         >> .path
-        >> flip Configuration.isPathExcluded configuration
+        >> (\a -> Configuration.isPathExcluded a configuration)
         >> not
 
 
@@ -338,7 +338,7 @@ subscriptions model =
     Sub.batch
         [ AnalyserPorts.onReset (always Reset)
         , if model.server then
-            Time.every Time.second (always ReloadTick)
+            Time.every 1000 (always ReloadTick)
           else
             Sub.none
         , FileWatch.watcher Change

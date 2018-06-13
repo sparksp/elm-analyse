@@ -1,7 +1,7 @@
 module Analyser.Checks.UnnecessaryParens exposing (checker)
 
 import AST.Ranges as Range
-import ASTUtil.Inspector as Inspector exposing (Order(Post), defaultConfig)
+import ASTUtil.Inspector as Inspector exposing (Order(..), defaultConfig)
 import Analyser.Checks.Base exposing (Checker)
 import Analyser.Configuration exposing (Configuration)
 import Analyser.FileContext exposing (FileContext)
@@ -44,7 +44,7 @@ scan fileContext _ =
                 []
     in
     x
-        |> List.uniqueBy toString
+        |> List.uniqueBy Debug.toString
         |> List.map buildMessage
 
 
@@ -86,7 +86,7 @@ onExpression ( range, expression ) context =
             onParenthesizedExpression range inner context
 
         OperatorApplication op dir left right ->
-            onOperatorApplication ( op, dir, left, right ) context
+            onOperatorApplication op dir left right context
 
         Application parts ->
             onApplication parts context
@@ -117,14 +117,14 @@ onListExpr : List (Ranged Expression) -> Context -> Context
 onListExpr exprs context =
     List.filterMap getParenthesized exprs
         |> List.map Tuple.first
-        |> flip (++) context
+        |> (\a -> a ++ context)
 
 
 onTuple : List (Ranged Expression) -> Context -> Context
 onTuple exprs context =
     List.filterMap getParenthesized exprs
         |> List.map Tuple.first
-        |> flip (++) context
+        |> (\a -> a ++ context)
 
 
 onRecord : List ( String, Ranged Expression ) -> Context -> Context
@@ -132,7 +132,7 @@ onRecord fields context =
     fields
         |> List.filterMap (Tuple.second >> getParenthesized)
         |> List.map Tuple.first
-        |> flip (++) context
+        |> (\a -> a ++ context)
 
 
 onCaseBlock : CaseBlock -> Context -> Context
@@ -150,7 +150,7 @@ onIfBlock clause thenBranch elseBranch context =
     [ clause, thenBranch, elseBranch ]
         |> List.filterMap getParenthesized
         |> List.map Tuple.first
-        |> flip (++) context
+        |> (\a -> a ++ context)
 
 
 onApplication : List (Ranged Expression) -> Context -> Context
@@ -160,12 +160,12 @@ onApplication parts context =
         |> Maybe.filter (Tuple.second >> Tuple.second >> Expression.isOperatorApplication >> not)
         |> Maybe.filter (Tuple.second >> Tuple.second >> Expression.isCase >> not)
         |> Maybe.map Tuple.first
-        |> Maybe.map (flip (::) context)
+        |> Maybe.map (\a -> a :: context)
         |> Maybe.withDefault context
 
 
-onOperatorApplication : ( String, InfixDirection, Ranged Expression, Ranged Expression ) -> Context -> Context
-onOperatorApplication ( _, _, left, right ) context =
+onOperatorApplication : String -> InfixDirection -> Ranged Expression -> Ranged Expression -> Context -> Context
+onOperatorApplication _ _ left right context =
     let
         fixHandSide : Ranged Expression -> Maybe Syntax.Range
         fixHandSide =
@@ -177,7 +177,7 @@ onOperatorApplication ( _, _, left, right ) context =
     , fixHandSide right
     ]
         |> List.filterMap identity
-        |> flip (++) context
+        |> (\a -> a ++ context)
 
 
 operatorHandSideAllowedParens : Ranged Expression -> Bool

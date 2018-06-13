@@ -4,7 +4,7 @@ import Analyser.Files.Json
 import Dict exposing (Dict)
 import Elm.Dependency exposing (Dependency)
 import Json.Decode as JD exposing (Decoder)
-import Json.Decode.Extra exposing ((|:))
+import Json.Decode.Pipeline exposing (required)
 import Json.Encode as JE exposing (Value)
 import Registry exposing (Registry)
 import Registry.Package as Package exposing (Package)
@@ -27,8 +27,8 @@ type alias DependencyInfo =
 decode : Decoder Dependencies
 decode =
     JD.succeed Dependencies
-        |: JD.field "values" (JD.dict decodeDependencyInfo)
-        |: JD.field "unused" (JD.list JD.string)
+        |> required "values" (JD.dict decodeDependencyInfo)
+        |> required "unused" (JD.list JD.string)
 
 
 encode : Dependencies -> Value
@@ -40,7 +40,7 @@ encode dependencies =
                 |> Dict.toList
                 |> JE.object
           )
-        , ( "unused", JE.list (List.map JE.string dependencies.unused) )
+        , ( "unused", JE.list JE.string dependencies.unused )
         ]
 
 
@@ -56,9 +56,9 @@ encodeDependencyInfo depInfo =
 decodeDependencyInfo : Decoder DependencyInfo
 decodeDependencyInfo =
     JD.succeed DependencyInfo
-        |: JD.field "dependency" Analyser.Files.Json.decodeDependency
-        |: JD.field "versionState" decodeVersionState
-        |: JD.field "package" (JD.maybe Package.decode)
+        |> required "dependency" Analyser.Files.Json.decodeDependency
+        |> required "versionState" decodeVersionState
+        |> required "package" (JD.maybe Package.decode)
 
 
 encodeVersionState : VersionState -> Value

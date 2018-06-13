@@ -1,10 +1,10 @@
 module Client.Graph.Table exposing (view)
 
 import Client.View.Panel as Panel
+import Dict
 import Graph exposing (NodeContext)
 import Html exposing (Html)
 import Html.Attributes as Html
-import IntDict
 import ModuleGraph exposing (ModuleGraph)
 
 
@@ -28,11 +28,11 @@ topListInAndOut count graph =
 
         topImportees : List (NodeContext ModuleGraph.Node ModuleGraph.Node)
         topImportees =
-            List.sortBy (.incoming >> IntDict.size >> (*) -1) nodeContexts
+            List.sortBy (.incoming >> Dict.size >> (*) -1) nodeContexts
 
         topImporters : List (NodeContext ModuleGraph.Node ModuleGraph.Node)
         topImporters =
-            List.sortBy (.outgoing >> IntDict.size >> (*) -1) nodeContexts
+            List.sortBy (.outgoing >> Dict.size >> (*) -1) nodeContexts
     in
     Html.div []
         [ Panel.view Panel.WidthHalf
@@ -61,8 +61,8 @@ topList nodeContexts =
                 (\nodeContext ->
                     Html.tr []
                         [ Html.td [] [ Html.text nodeContext.node.label.text ]
-                        , Html.td [] [ Html.text (toString (IntDict.size nodeContext.incoming)) ]
-                        , Html.td [] [ Html.text (toString (IntDict.size nodeContext.outgoing)) ]
+                        , Html.td [] [ Html.text (Debug.toString (Dict.size nodeContext.incoming)) ]
+                        , Html.td [] [ Html.text (Debug.toString (Dict.size nodeContext.outgoing)) ]
                         ]
                 )
                 nodeContexts

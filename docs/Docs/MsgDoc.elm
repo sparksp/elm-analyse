@@ -656,7 +656,7 @@ view maybeKey =
         maybeMessageDoc =
             Maybe.andThen forKey maybeKey
     in
-    Grid.container [ Html.style [ ( "padding-top", "20px" ), ( "margin-bottom", "60px" ) ] ]
+    Grid.container [ Html.style "padding-top" "20px", Html.style "margin-bottom", "60px" ]
         [ Grid.row []
             [ Grid.col []
                 [ Html.h1 [] [ Html.text "Checks" ]
@@ -729,7 +729,7 @@ getMessage d =
                     M.newMessage (FileRef "abcdef01234567890" "./Foo.elm") checker.info.key mess
 
                 Nothing ->
-                    SafeDebug.crash "Something is wrong"
+                    SafeDebug.todo "Something is wrong"
 
 
 exampleMsgJson : Message -> Html msg
@@ -753,7 +753,7 @@ getMessages input checker =
                 }
             )
         |> Result.toMaybe
-        |> Maybe.map (flip checker.check docConfiguration)
+        |> Maybe.map (\a -> checker.check a docConfiguration)
 
 
 docConfiguration : Configuration

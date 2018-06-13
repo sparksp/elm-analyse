@@ -2,12 +2,13 @@ module Client.State exposing (State, listen, tick, toMaybe, view)
 
 import Analyser.Checks
 import Analyser.State as AS
+import Browser.Navigation
 import Client.LoadingScreen as LoadingScreen
 import Client.Socket exposing (dashboardAddress)
 import Html exposing (Html)
 import Json.Decode as JD
-import Navigation exposing (Location)
 import RemoteData exposing (RemoteData)
+import Url exposing (Url)
 import WebSocket as WS
 
 
@@ -15,12 +16,13 @@ type alias State =
     RemoteData String AS.State
 
 
-listen : Location -> Sub State
+listen : Url -> Sub State
 listen location =
-    WS.listen (dashboardAddress location) (JD.decodeString (AS.decodeState Analyser.Checks.schemas) >> RemoteData.fromResult)
+    --TODO
+    WS.listen (dashboardAddress location) (JD.decodeString (AS.decodeState Analyser.Checks.schemas) >> Result.mapError Debug.toString >> RemoteData.fromResult)
 
 
-tick : Location -> Cmd msg
+tick : Url -> Cmd msg
 tick location =
     WS.send (dashboardAddress location) "ping"
 

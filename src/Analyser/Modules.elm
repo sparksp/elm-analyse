@@ -7,7 +7,7 @@ import Analyser.Files.Types exposing (LoadedSourceFiles)
 import Elm.Dependency exposing (Dependency)
 import Elm.Syntax.Base exposing (ModuleName)
 import Json.Decode as JD exposing (Decoder)
-import Json.Decode.Extra exposing ((|:))
+import Json.Decode.Pipeline exposing (required)
 import Json.Encode as JE exposing (Value)
 
 
@@ -41,14 +41,14 @@ edgesInFile : FileContext -> List ( List String, List String )
 edgesInFile file =
     file.ast.imports
         |> List.map .moduleName
-        |> List.map ((,) file.moduleName)
+        |> List.map (Tuple.pair file.moduleName)
 
 
 decode : JD.Decoder Modules
 decode =
     JD.succeed Modules
-        |: JD.field "projectModules" (JD.list decodeModuleName)
-        |: JD.field "dependencies" (JD.list decodeDependency)
+        |> required "projectModules" (JD.list decodeModuleName)
+        |> required "dependencies" (JD.list decodeDependency)
 
 
 tupleFromLIst : List a -> JD.Decoder ( a, a )
@@ -64,14 +64,14 @@ tupleFromLIst x =
 encode : Modules -> Value
 encode e =
     JE.object
-        [ ( "projectModules", JE.list <| List.map encodeModuleName e.projectModules )
-        , ( "dependencies", JE.list (List.map encodeDependency e.dependencies) )
+        [ ( "projectModules", JE.list encodeModuleName e.projectModules )
+        , ( "dependencies", JE.list encodeDependency e.dependencies )
         ]
 
 
 encodeDependency : ( ModuleName, ModuleName ) -> JE.Value
 encodeDependency ( x, y ) =
-    JE.list [ encodeModuleName x, encodeModuleName y ]
+    JE.list encodeModuleName [ x, y ]
 
 
 decodeDependency : Decoder ( ModuleName, ModuleName )

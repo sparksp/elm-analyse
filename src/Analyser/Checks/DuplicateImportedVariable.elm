@@ -1,7 +1,7 @@
 module Analyser.Checks.DuplicateImportedVariable exposing (checker)
 
 import AST.Ranges as Range
-import ASTUtil.Inspector as Inspector exposing (Order(Post, Skip), defaultConfig)
+import ASTUtil.Inspector as Inspector exposing (Order(..), defaultConfig)
 import Analyser.Checks.Base exposing (Checker)
 import Analyser.Configuration exposing (Configuration)
 import Analyser.FileContext exposing (FileContext)
@@ -127,7 +127,7 @@ constructorsAndValues imp =
 
 exposingValues : Ranged TopLevelExpose -> Ranged String
 exposingValues ( r, t ) =
-    (,) r <|
+    Tuple.pair r <|
         case t of
             TypeExpose s ->
                 s.name
@@ -146,12 +146,7 @@ exposingConstructors : Ranged TopLevelExpose -> List (Ranged String)
 exposingConstructors ( _, t ) =
     case t of
         TypeExpose s ->
-            case s.constructors of
-                Just (Explicit xs) ->
-                    xs
-
-                _ ->
-                    []
+            []
 
         _ ->
             []

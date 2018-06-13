@@ -2,11 +2,12 @@ module Client.Components.MessageList exposing (Model, Msg, init, subscriptions, 
 
 import Analyser.Messages.Grouped as Grouped exposing (GroupedMessages)
 import Analyser.Messages.Types exposing (Message)
+import Browser.Navigation
 import Client.Components.ActiveMessageDialog as ActiveMessageDialog
 import Client.Messages as M
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
-import Navigation exposing (Location)
+import Url exposing (Url)
 
 
 type alias Model =
@@ -30,7 +31,7 @@ withMessages x m =
     { m | messages = x }
 
 
-update : Location -> Msg -> Model -> ( Model, Cmd Msg )
+update : Url -> Msg -> Model -> ( Model, Cmd Msg )
 update location msg model =
     case msg of
         Focus m ->

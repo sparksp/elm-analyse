@@ -38,7 +38,7 @@ getMessages input checker =
                 }
             )
         |> Result.toMaybe
-        |> Maybe.map (flip checker.check defaultConfiguration)
+        |> Maybe.map (\a -> checker.check a defaultConfiguration)
         |> Maybe.map (List.map (Data.withDescription "foo"))
 
 

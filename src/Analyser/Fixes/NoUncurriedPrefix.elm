@@ -30,18 +30,23 @@ fix input messageData =
             IncompatibleData
 
 
-parenRegex : Regex.Regex
+parenRegex : Maybe Regex.Regex
 parenRegex =
-    Regex.regex "[()]"
+    Regex.fromString "[()]"
 
 
 updateExpression : ( String, File ) -> ( Range, Range, Range ) -> Patch
 updateExpression ( content, _ ) ( opRange, argRange1, argRange2 ) =
     let
         op =
-            FileContent.getStringAtRange opRange content
+            let
+                original =
+                    FileContent.getStringAtRange opRange content
+            in
+            parenRegex
                 -- Drop the surrounding parens
-                |> Regex.replace Regex.All parenRegex (\_ -> "")
+                |> Maybe.map (\r -> Regex.replace r (\_ -> "") original)
+                |> Maybe.withDefault original
 
         arg1 =
             FileContent.getStringAtRange argRange1 content

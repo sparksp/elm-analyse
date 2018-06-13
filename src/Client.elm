@@ -1,23 +1,26 @@
 module Client exposing (main)
 
+import Browser
 import Client.App.App as App
 import Html exposing (div)
-import Navigation
+import Json.Encode exposing (Value)
 
 
-main : Program Never App.Model App.Msg
+main : Program Value App.Model App.Msg
 main =
-    Navigation.program
-        App.OnLocation
+    Browser.fullscreen
         { init = App.init
+        , onNavigation = Just App.OnLocation
         , view = view
         , update = App.update
         , subscriptions = App.subscriptions
         }
 
 
-view : App.Model -> Html.Html App.Msg
+view : App.Model -> Browser.Page App.Msg
 view model =
-    div []
+    { title = "Elm Analyse"
+    , body =
         [ App.view model
         ]
+    }

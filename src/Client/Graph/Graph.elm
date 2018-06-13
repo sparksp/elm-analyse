@@ -6,12 +6,13 @@ module Client.Graph.Graph
         , view
         )
 
+-- import Graph.DOT
+
 import Client.Graph.Table as Table
 import Client.Graph.Widgets as Widgets
 import Client.GraphBuilder
 import Client.State
 import Graph
-import Graph.DOT
 import Html exposing (Html)
 import Html.Attributes as Html
 import Html.Lazy
@@ -54,7 +55,10 @@ view s (Model g) =
                         , Html.div [ Html.class "row" ]
                             [ Html.h2 [] [ Html.text "DOT file" ]
                             , Html.pre []
-                                [ Html.text (Graph.DOT.output (Just << .text) (Just << .text) graph) ]
+                                [ Html.text
+                                    -- (Graph.DOT.output (Just << .text) (Just << .text) graph)
+                                    "TODO"
+                                ]
                             ]
                         ]
 

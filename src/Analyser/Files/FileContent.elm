@@ -6,7 +6,6 @@ import Elm.Parser as Parser
 import Elm.RawFile exposing (RawFile)
 import Json.Decode
 import Maybe.Extra as Maybe
-import Result.Extra as Result
 
 
 type alias RefeshedAST =
@@ -41,9 +40,14 @@ loadedFileFromContent fileContent =
     case fileContent.content of
         Just content ->
             Parser.parse content
-                |> Result.map Ok
-                |> Result.mapError (List.head >> Maybe.withDefault "" >> Err)
-                |> Result.merge
+                |> (\r ->
+                        case r of
+                            Err e ->
+                                List.head e |> Maybe.withDefault "" |> Err
+
+                            Ok e ->
+                                Ok e
+                   )
 
         Nothing ->
             Err "No file content"

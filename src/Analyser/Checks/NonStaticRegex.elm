@@ -3,7 +3,7 @@ module Analyser.Checks.NonStaticRegex exposing (checker)
 import AST.Ranges as Range
 import ASTUtil.Functions
 import ASTUtil.Imports as Imports exposing (FunctionReference)
-import ASTUtil.Inspector as Inspector exposing (Order(Inner, Post), defaultConfig)
+import ASTUtil.Inspector as Inspector exposing (Order(..), defaultConfig)
 import Analyser.Checks.Base exposing (Checker)
 import Analyser.Configuration exposing (Configuration)
 import Analyser.FileContext exposing (FileContext)
@@ -40,11 +40,7 @@ If it is imported the dynamic usages should inspected and then transformed into 
 -}
 scan : FileContext -> Configuration -> List MessageData
 scan fileContext _ =
-    let
-        regexImport =
-            Imports.buildImportInformation [ "Regex" ] "regex" fileContext.ast
-    in
-    case regexImport of
+    case Imports.buildImportInformation [ "Regex" ] "regex" fileContext.ast of
         Nothing ->
             []
 

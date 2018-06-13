@@ -58,17 +58,17 @@ type alias InnerModel =
 
 init : Int -> State -> Maybe ( Model, Cmd Msg, State )
 init x state =
-    State.getMessage x state |> Maybe.andThen (flip initWithMessage state)
+    State.getMessage x state |> Maybe.andThen (\a -> initWithMessage a state)
 
 
 initWithMessage : Message -> State -> Maybe ( Model, Cmd Msg, State )
-initWithMessage message state =
-    Analyser.Fixers.getFixer message
+initWithMessage m state =
+    Analyser.Fixers.getFixer m
         |> Maybe.map
             (\fixer ->
-                ( Model { message = message, fixer = fixer, done = False, success = True }
-                , loadFileContentWithSha message.file.path
-                , State.startFixing message state
+                ( Model { message = m, fixer = fixer, done = False, success = True }
+                , loadFileContentWithSha m.file.path
+                , State.startFixing m state
                 )
             )
 
@@ -106,7 +106,7 @@ update codeBase msg (Model model) =
                             |> (\fileLoad ->
                                     Parser.parse fileLoad.content
                                         |> Result.map (Processing.process (CodeBase.processContext codeBase))
-                                        |> Result.map ((,) fileLoad.content)
+                                        |> Result.map (Tuple.pair fileLoad.content)
                                         |> Result.toMaybe
                                )
                             |> Result.fromMaybe "Could not parse file"
@@ -149,8 +149,8 @@ applyFix model pair =
 
 
 fileHashEqual : FileLoad -> Message -> Bool
-fileHashEqual reference message =
-    reference.file == message.file
+fileHashEqual reference m =
+    reference.file == m.file
 
 
 subscriptions : Model -> Sub Msg

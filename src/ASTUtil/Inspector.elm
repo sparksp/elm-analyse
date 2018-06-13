@@ -1,4 +1,4 @@
-module ASTUtil.Inspector exposing (Config, Order(Continue, Inner, Post, Pre, Skip), defaultConfig, inspect)
+module ASTUtil.Inspector exposing (Config, Order(..), defaultConfig, inspect)
 
 import Elm.Syntax.Declaration exposing (Declaration(..))
 import Elm.Syntax.Expression exposing (Case, Expression(..), Function, FunctionSignature, Lambda, LetBlock, LetDeclaration(..), RecordUpdate)
@@ -30,7 +30,7 @@ type alias Config context =
     , onType : Order context Type
     , onDestructuring : Order context ( Ranged Pattern, Ranged Expression )
     , onExpression : Order context (Ranged Expression)
-    , onOperatorApplication : Order context ( String, InfixDirection, Ranged Expression, Ranged Expression )
+    , onOperatorApplication : Order context { operator : String, direction : InfixDirection, left : Ranged Expression, right : Ranged Expression }
     , onTypeAnnotation : Order context (Ranged TypeAnnotation)
     , onLambda : Order context Lambda
     , onLetBlock : Order context LetBlock
@@ -286,6 +286,9 @@ inspectInnerExpression config expression context =
         Literal _ ->
             context
 
+        Hex _ ->
+            context
+
         CharLiteral _ ->
             context
 
@@ -309,8 +312,8 @@ inspectInnerExpression config expression context =
 
         OperatorApplication op dir left right ->
             actionLambda config.onOperatorApplication
-                (flip (List.foldl (inspectExpression config)) [ left, right ])
-                ( op, dir, left, right )
+                (\a -> List.foldl (inspectExpression config) a [ left, right ])
+                { operator = op, direction = dir, left = left, right = right }
                 context
 
         IfBlock e1 e2 e3 ->

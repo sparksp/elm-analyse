@@ -40,7 +40,7 @@ buildImportInformation moduleName function file =
 
 {-| TODO
 -}
-exposesFunction : String -> Exposing (Ranged TopLevelExpose) -> Bool
+exposesFunction : String -> Exposing -> Bool
 exposesFunction s exposure =
     case exposure of
         All _ ->
@@ -69,7 +69,7 @@ naiveStringifyImport imp =
         ]
 
 
-stringifyExposingList : Maybe (Exposing (Ranged TopLevelExpose)) -> String
+stringifyExposingList : Maybe Exposing -> String
 stringifyExposingList exp =
     case exp of
         Nothing ->
@@ -125,32 +125,14 @@ stringifyExpose ( _, expose ) =
 
 
 stringifyExposedType : ExposedType -> String
-stringifyExposedType { name, constructors } =
+stringifyExposedType { name, open } =
     name
-        ++ (case constructors of
+        ++ (case open of
                 Nothing ->
                     ""
 
-                Just (All _) ->
+                Just _ ->
                     "(..)"
-
-                Just (Explicit explicits) ->
-                    case explicits of
-                        [] ->
-                            ""
-
-                        xs ->
-                            let
-                                areOnDifferentLines =
-                                    rangesOnDifferentLines (List.map Tuple.first xs)
-
-                                seperator =
-                                    if areOnDifferentLines then
-                                        "\n    , "
-                                    else
-                                        ", "
-                            in
-                            "(" ++ (String.join seperator <| List.map Tuple.second explicits) ++ ")"
            )
 
 
@@ -159,7 +141,7 @@ removeRangeFromImport range imp =
     { imp | exposingList = Maybe.andThen (removeRangeFromExposingList range) imp.exposingList }
 
 
-removeRangeFromExposingList : Range -> Exposing (Ranged TopLevelExpose) -> Maybe (Exposing (Ranged TopLevelExpose))
+removeRangeFromExposingList : Range -> Exposing -> Maybe Exposing
 removeRangeFromExposingList range exp =
     case exp of
         All r ->
@@ -179,7 +161,7 @@ removeRangeFromExposingList range exp =
 
 removeRangeFromExpose : Range -> Ranged TopLevelExpose -> Maybe (Ranged TopLevelExpose)
 removeRangeFromExpose range ( r, expose ) =
-    Maybe.map ((,) r) <|
+    Maybe.map (Tuple.pair r) <|
         case expose of
             InfixExpose x ->
                 if r == range then
@@ -201,10 +183,18 @@ removeRangeFromExpose range ( r, expose ) =
 
             TypeExpose exposedType ->
                 Just
-                    (TypeExpose { exposedType | constructors = Maybe.andThen (removeRangeFromConstructors range) exposedType.constructors })
+                    (TypeExpose
+                        { exposedType
+                            | open =
+                                if exposedType.open == Just range then
+                                    Nothing
+                                else
+                                    exposedType.open
+                        }
+                    )
 
 
-removeRangeFromConstructors : Range -> Exposing ValueConstructorExpose -> Maybe (Exposing ValueConstructorExpose)
+removeRangeFromConstructors : Range -> Exposing -> Maybe Exposing
 removeRangeFromConstructors range exp =
     case exp of
         All r ->

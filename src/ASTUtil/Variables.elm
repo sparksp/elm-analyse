@@ -1,6 +1,6 @@
 module ASTUtil.Variables
     exposing
-        ( VariableType(Defined, Imported, Pattern, TopLevel)
+        ( VariableType(..)
         , getImportsVars
         , getLetDeclarationsVars
         , getTopLevels
@@ -13,7 +13,7 @@ module ASTUtil.Variables
 import Elm.Syntax.Base exposing (VariablePointer)
 import Elm.Syntax.Declaration exposing (Declaration(..))
 import Elm.Syntax.Exposing exposing (Exposing(..), TopLevelExpose(..))
-import Elm.Syntax.Expression exposing (Expression(..), LetDeclaration(LetDestructuring, LetFunction))
+import Elm.Syntax.Expression exposing (Expression(..), LetDeclaration(..))
 import Elm.Syntax.File exposing (File)
 import Elm.Syntax.Module exposing (Import)
 import Elm.Syntax.Pattern exposing (Pattern(..), QualifiedNameRef)
@@ -70,7 +70,7 @@ getImportVars imp =
     getImportExposedVars imp.exposingList
 
 
-getImportExposedVars : Maybe (Exposing (Ranged TopLevelExpose)) -> List ( VariablePointer, VariableType )
+getImportExposedVars : Maybe Exposing -> List ( VariablePointer, VariableType )
 getImportExposedVars e =
     case e of
         Just (All _) ->
@@ -94,17 +94,12 @@ getImportExposedVars e =
                                 [ ( VariablePointer x r, Imported ) ]
 
                             TypeExpose exposedType ->
-                                case exposedType.constructors of
-                                    Just (All _) ->
+                                case exposedType.open of
+                                    Just _ ->
                                         []
 
                                     Nothing ->
                                         [ ( VariablePointer exposedType.name r, Imported ) ]
-
-                                    Just (Explicit constructors) ->
-                                        constructors
-                                            |> List.map (uncurry (flip VariablePointer))
-                                            |> List.map (flip (,) Imported)
                     )
 
 
@@ -121,7 +116,7 @@ getDeclarationVars ( r, decl ) =
             List.map (\{ name, range } -> ( { value = name, range = range }, TopLevel )) t.constructors
 
         PortDeclaration p ->
-            [ ( { value = p.name, range = r }, TopLevel ) ]
+            [ ( p.name, TopLevel ) ]
 
         InfixDeclaration _ ->
             []
@@ -188,6 +183,9 @@ patternToUsedVars ( range, p ) =
         FloatPattern _ ->
             []
 
+        HexPattern _ ->
+            []
+
 
 qualifiedNameUsedVars : QualifiedNameRef -> Range -> List VariablePointer
 qualifiedNameUsedVars { moduleName, name } range =
@@ -213,7 +211,7 @@ patternToVarsInner isFirst ( range, p ) =
             List.concatMap recur t
 
         RecordPattern r ->
-            List.map (flip (,) Pattern) r
+            List.map (\v -> ( v, Pattern )) r
 
         UnConsPattern l r ->
             recur l ++ recur r
@@ -258,4 +256,7 @@ patternToVarsInner isFirst ( range, p ) =
             []
 
         FloatPattern _ ->
+            []
+
+        HexPattern _ ->
             []

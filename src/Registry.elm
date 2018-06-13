@@ -17,4 +17,4 @@ lookup key (Registry values) =
 
 fromValue : Value -> Registry
 fromValue value =
-    Registry (JD.decodeValue (JD.list Package.decode) value)
+    Registry <| Result.mapError Debug.toString <| JD.decodeValue (JD.list Package.decode) value

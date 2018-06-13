@@ -1,4 +1,4 @@
-port module Analyser.FileWatch exposing (FileChange(Remove, Update), Person, watcher)
+port module Analyser.FileWatch exposing (FileChange(..), Person, watcher)
 
 import Debug as SafeDebug
 
@@ -32,9 +32,9 @@ asFileChange p =
             Remove x
 
         _ ->
-            SafeDebug.crash
+            SafeDebug.todo
                 ("Unknown filechange: "
-                    ++ toString p
+                    ++ Debug.toString p
                     ++ "."
                     ++ "This should never happen. Please create an issue the on elm-analyse issue tracker."
                 )

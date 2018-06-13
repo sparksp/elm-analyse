@@ -20,12 +20,12 @@ module Analyser.State
 
 import Analyser.Messages.Json exposing (decodeMessage, encodeMessage)
 import Analyser.Messages.Schemas exposing (Schemas)
-import Analyser.Messages.Types as Messages exposing (Message, MessageId, MessageStatus(Applicable))
+import Analyser.Messages.Types as Messages exposing (Message, MessageId, MessageStatus(..))
 import Analyser.Messages.Util as Messages exposing (blockForShas, markFixing)
 import Analyser.Modules exposing (Modules)
 import Analyser.State.Dependencies exposing (Dependencies)
 import Json.Decode as JD exposing (Decoder)
-import Json.Decode.Extra exposing ((|:))
+import Json.Decode.Pipeline exposing (required)
 import Json.Encode as JE exposing (Value)
 import List.Extra as List
 
@@ -167,22 +167,22 @@ updateModules newModules s =
 decodeState : Schemas -> Decoder State
 decodeState schemas =
     JD.succeed State
-        |: JD.field "messages" (JD.list (decodeMessage schemas))
-        |: JD.field "dependencies" Analyser.State.Dependencies.decode
-        |: JD.field "idCount" JD.int
-        |: JD.field "status" decodeStatus
-        |: JD.field "queue" (JD.list JD.int)
-        |: JD.field "modules" Analyser.Modules.decode
+        |> required "messages" (JD.list (decodeMessage schemas))
+        |> required "dependencies" Analyser.State.Dependencies.decode
+        |> required "idCount" JD.int
+        |> required "status" decodeStatus
+        |> required "queue" (JD.list JD.int)
+        |> required "modules" Analyser.Modules.decode
 
 
 encodeState : State -> Value
 encodeState state =
     JE.object
-        [ ( "messages", JE.list (List.map encodeMessage state.messages) )
+        [ ( "messages", JE.list encodeMessage state.messages )
         , ( "dependencies", Analyser.State.Dependencies.encode state.dependencies )
         , ( "idCount", JE.int state.idCount )
         , ( "status", encodeStatus state.status )
-        , ( "queue", JE.list (List.map JE.int state.queue) )
+        , ( "queue", JE.list JE.int state.queue )
         , ( "modules", Analyser.Modules.encode state.modules )
         ]
 

@@ -1,5 +1,7 @@
-module Client.App.App exposing (Model, Msg(OnLocation), init, subscriptions, update, view)
+module Client.App.App exposing (Model, Msg(..), init, subscriptions, update, view)
 
+import Browser exposing (Env)
+import Browser.Navigation
 import Client.App.Menu
 import Client.Components.FileTree as FileTree
 import Client.Dashboard as Dashboard
@@ -12,9 +14,9 @@ import Client.Socket exposing (controlAddress)
 import Client.State exposing (State)
 import Html exposing (div)
 import Html.Attributes exposing (id)
-import Navigation exposing (Location)
 import RemoteData
 import Time
+import Url exposing (Url)
 import WebSocket as WS
 
 
@@ -23,13 +25,13 @@ type Msg
     | FileTreeMsg FileTree.Msg
     | PackageDependenciesMsg PackageDependencies.Msg
     | Refresh
-    | OnLocation Location
+    | OnLocation Url
     | Tick
     | NewState State
 
 
 type alias Model =
-    { location : Location
+    { location : Url
     , content : Content
     , state : State
     }
@@ -49,7 +51,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Client.State.listen model.location |> Sub.map NewState
-        , Time.every (Time.second * 10) (always Tick)
+        , Time.every 10000 (always Tick)
         , case model.content of
             MessagesPageContent sub ->
                 MessagesPage.subscriptions sub |> Sub.map MessagesPageMsg
@@ -75,12 +77,12 @@ subscriptions model =
         ]
 
 
-init : Location -> ( Model, Cmd Msg )
-init l =
-    onLocation l { location = l, content = NotFound, state = RemoteData.Loading }
+init : Env a -> ( Model, Cmd Msg )
+init env =
+    onLocation env.url { location = env.url, content = NotFound, state = RemoteData.Loading }
 
 
-onLocation : Location -> Model -> ( Model, Cmd Msg )
+onLocation : Url -> Model -> ( Model, Cmd Msg )
 onLocation l model =
     let
         route =

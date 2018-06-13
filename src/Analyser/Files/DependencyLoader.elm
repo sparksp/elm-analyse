@@ -9,7 +9,6 @@ import Elm.Dependency exposing (Dependency)
 import Elm.Interface as Interface
 import Elm.RawFile exposing (RawFile)
 import Result
-import Result.Extra as Result
 import Util.Logger as Logger
 
 
@@ -92,7 +91,7 @@ update msg model =
                     loadedFiles =
                         List.map dependencyFileInterface files
                 in
-                if not <| List.all Result.isOk loadedFiles then
+                if not <| List.all ((/=) Nothing) <| List.map Result.toMaybe loadedFiles then
                     ( { model | result = Just (Err "Could not load all dependency files") }
                     , Cmd.none
                     )

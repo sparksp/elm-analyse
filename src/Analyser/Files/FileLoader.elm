@@ -37,19 +37,25 @@ subscriptions =
 update : Msg -> ( LoadedSourceFile, Cmd a )
 update msg =
     case msg of
-        OnFileContent fileContent ->
+        OnFileContent fc ->
             let
                 ( fileLoad, store ) =
-                    FileContent.asRawFile fileContent
+                    FileContent.asRawFile fc
 
                 cmd =
                     if store then
-                        ( fileContent.sha1, Result.toMaybe fileLoad )
-                            |> uncurry (Maybe.map2 (\a b -> storeAstForSha ( a, Json.Encode.encode 0 (Elm.Json.Encode.encode b) )))
+                        let
+                            sha =
+                                fc.sha1
+                        in
+                        Maybe.map2
+                            (\a b -> storeAstForSha ( a, Json.Encode.encode 0 (Elm.Json.Encode.encode b) ))
+                            sha
+                            (Result.toMaybe fileLoad)
                             |> Maybe.withDefault Cmd.none
                     else
                         Cmd.none
             in
-            ( ( fileContent, fileLoad )
+            ( ( fc, fileLoad )
             , cmd
             )

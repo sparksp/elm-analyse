@@ -102,3 +102,6 @@ optimize range (( r, pattern ) as input) =
 
             FloatPattern _ ->
                 input
+
+            HexPattern _ ->
+                input

@@ -1,6 +1,7 @@
 module Docs.Main exposing (main)
 
 import Bootstrap.Navbar
+import Browser.Navigation
 import Docs.Changelog as Changelog
 import Docs.Configuration as Configuration
 import Docs.Contributing as Contributing
@@ -10,7 +11,7 @@ import Docs.Menu
 import Docs.MsgDoc
 import Docs.Page as Page exposing (Page(..))
 import Html exposing (Html)
-import Navigation exposing (Location)
+import Url exposing (Url)
 
 
 main : Program Never Model Msg
@@ -47,7 +48,7 @@ type alias Model =
     }
 
 
-init : Location -> ( Model, Cmd Msg )
+init : Url -> ( Model, Cmd Msg )
 init location =
     let
         ( menu, menuCmds ) =

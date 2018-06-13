@@ -15,7 +15,7 @@ moduleName : RawFile -> ModuleName
 moduleName rf =
     case RawFile.moduleName rf of
         Nothing ->
-            SafeDebug.crash "Legacy"
+            SafeDebug.todo "Legacy"
 
         Just x ->
             x

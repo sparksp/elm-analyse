@@ -25,7 +25,7 @@ twoTupleAsApplicationWithTwoArgs =
     ( "twoTupleAsApplicationWithTwoArgs"
     , """module Foo exposing (..)
 
-foo = (,) 1 2
+foo = Tuple.pair 1 2
 """
     , """module Foo exposing (..)
 

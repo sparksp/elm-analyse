@@ -43,19 +43,19 @@ setDependencies deps (CodeBase codeBase) =
 
 
 sourceFiles : CodeBase -> List LoadedSourceFile
-sourceFiles (CodeBase codeBase) =
-    Dict.values codeBase.sources
+sourceFiles (CodeBase cb) =
+    Dict.values cb.sources
 
 
 addSourceFiles : List LoadedSourceFile -> CodeBase -> CodeBase
-addSourceFiles sourceFiles (CodeBase codeBase) =
+addSourceFiles sources (CodeBase codeBase) =
     CodeBase
         { codeBase
-            | sources = mergeLoadedSourceFiles sourceFiles codeBase.sources
+            | sources = mergeLoadedSourceFiles sources codeBase.sources
             , processContext =
                 List.foldl Processing.addFile
                     codeBase.processContext
-                    (List.filterMap (Tuple.second >> Result.toMaybe) sourceFiles)
+                    (List.filterMap (Tuple.second >> Result.toMaybe) sources)
         }
 
 

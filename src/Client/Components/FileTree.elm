@@ -2,6 +2,7 @@ module Client.Components.FileTree exposing (Model, Msg, init, onNewState, subscr
 
 import Analyser.Messages.Grouped as Grouped exposing (GroupedMessages)
 import Analyser.Messages.Types exposing (Message)
+import Browser.Navigation
 import Client.Components.MessageList as MessageList
 import Client.State
 import Html exposing (Html)
@@ -9,7 +10,7 @@ import Html.Attributes
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as JD
-import Navigation exposing (Location)
+import Url exposing (Url)
 
 
 type alias Model =
@@ -82,7 +83,7 @@ onNewState s model =
         |> updateMessageList
 
 
-update : Client.State.State -> Location -> Msg -> Model -> ( Model, Cmd Msg )
+update : Client.State.State -> Url -> Msg -> Model -> ( Model, Cmd Msg )
 update state location msg model =
     case msg of
         OnFileTree x ->
@@ -141,7 +142,7 @@ view m =
             Html.a
                 [ Html.Attributes.class "list-group-item", onClick (OnSelectFile fileName) ]
                 [ Html.span [ Html.Attributes.class "badge" ]
-                    [ Html.text <| toString (List.length messages) ]
+                    [ Html.text <| String.fromInt (List.length messages) ]
                 , Html.text fileName
                 ]
     in
@@ -162,7 +163,7 @@ view m =
             Just fileIndex ->
                 Html.div
                     [ Html.Attributes.class "row"
-                    , Html.Attributes.style [ ( "padding-top", "10px" ) ]
+                    , Html.Attributes.style "padding-top" "10px"
                     ]
                     [ Html.div [ Html.Attributes.class "col-md-6 col-sm-6" ]
                         [ Html.div [ Html.Attributes.class "list-group" ]
