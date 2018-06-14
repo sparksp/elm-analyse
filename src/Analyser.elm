@@ -13,7 +13,9 @@ import Analyser.SourceLoadingStage as SourceLoadingStage
 import Analyser.State as State exposing (State)
 import Analyser.State.Dependencies
 import AnalyserPorts
+import Elm.Project
 import Inspection
+import Json.Decode
 import Json.Encode exposing (Value)
 import Platform exposing (worker)
 import Registry exposing (Registry)
@@ -30,6 +32,7 @@ type alias Model =
     , changedFiles : List String
     , server : Bool
     , registry : Registry
+    , project : Maybe Elm.Project.Project
     }
 
 
@@ -54,6 +57,7 @@ type Stage
 
 type alias Flags =
     { server : Bool
+    , elmPackage : Value
     , registry : Value
     }
 
@@ -65,18 +69,45 @@ main =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    reset
-        ( { context = ContextLoader.emptyContext
-          , stage = Finished
-          , configuration = Configuration.defaultConfiguration
-          , codeBase = CodeBase.init
-          , state = State.initialState
-          , changedFiles = []
-          , server = flags.server
-          , registry = Registry.fromValue flags.registry
-          }
-        , Cmd.none
-        )
+    let
+        projectDecode =
+            Json.Decode.decodeValue Elm.Project.decoder flags.elmPackage
+    in
+    case projectDecode of
+        Ok project ->
+            reset
+                ( { context = ContextLoader.emptyContext
+                  , stage = Finished
+                  , configuration = Configuration.defaultConfiguration
+                  , codeBase = CodeBase.init
+                  , state = State.initialState
+                  , changedFiles = []
+                  , server = flags.server
+                  , registry = Registry.fromValue flags.registry
+                  , project = Just project
+                  }
+                , Cmd.none
+                )
+
+        Err e ->
+            ( { context = ContextLoader.emptyContext
+              , stage = Finished
+              , configuration = Configuration.defaultConfiguration
+              , codeBase = CodeBase.init
+              , state = State.initialState
+              , changedFiles = []
+              , server = flags.server
+              , registry = Registry.fromValue flags.registry
+              , project = Nothing
+              }
+            , AnalyserPorts.sendReport
+                { messages = []
+                , modules = Analyser.Modules.empty
+                , unusedDependencies = []
+                , success = False
+                , error = Just (Debug.toString e)
+                }
+            )
 
 
 reset : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
@@ -86,7 +117,7 @@ reset ( model, cmds ) =
         , state = State.initialState
         , codeBase = CodeBase.init
       }
-    , Cmd.batch [ ContextLoader.loadContext (), cmds ]
+    , Cmd.batch [ ContextLoader.loadContext Json.Encode.null, cmds ]
     )
         |> doSendState
 
@@ -105,22 +136,30 @@ update msg model =
 
         OnContext context ->
             let
+                newModel =
+                    { model | context = context }
+
                 ( configuration, messages ) =
                     Configuration.fromString context.configuration
 
                 ( stage, cmds ) =
                     DependencyLoadingStage.init context.interfaceFiles
             in
-            ( { model
-                | context = context
-                , configuration = configuration
-                , stage = DependencyLoadingStage stage
-              }
-            , Cmd.batch <|
-                Cmd.map DependencyLoadingStageMsg cmds
-                    :: List.map Logger.info messages
-            )
-                |> doSendState
+            if DependencyLoadingStage.isDone stage then
+                ( { newModel | codeBase = CodeBase.setDependencies (DependencyLoadingStage.getDependencies stage) newModel.codeBase }
+                , Cmd.map DependencyLoadingStageMsg cmds
+                )
+                    |> startSourceLoading newModel.context.sourceFiles
+            else
+                ( { newModel
+                    | configuration = configuration
+                    , stage = DependencyLoadingStage stage
+                  }
+                , Cmd.batch <|
+                    Cmd.map DependencyLoadingStageMsg cmds
+                        :: List.map Logger.info messages
+                )
+                    |> doSendState
 
         DependencyLoadingStageMsg x ->
             case model.stage of
@@ -304,13 +343,18 @@ finishProcess newStage cmds model =
                 , state = newState
                 , codeBase = newCodeBase
             }
+
+        _ =
+            Debug.log "Finish" model
     in
-    ( newModel
+    ( Debug.log "NewModel" newModel
     , Cmd.batch
         [ AnalyserPorts.sendReport
             { messages = newState.messages
             , modules = newState.modules
             , unusedDependencies = newState.dependencies.unused
+            , success = True
+            , error = Nothing
             }
         , AnalyserPorts.sendStateValue newState
         , Cmd.map SourceLoadingStageMsg cmds
@@ -336,13 +380,15 @@ onSourceLoadingStageMsg x stage model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ AnalyserPorts.onReset (always Reset)
-        , if model.server then
-            Time.every 1000 (always ReloadTick)
+        [ if model.server then
+            Sub.batch
+                [ Time.every 1000 (always ReloadTick)
+                , AnalyserPorts.onReset (always Reset)
+                , FileWatch.watcher Change
+                , AnalyserPorts.onFixMessage OnFixMessage
+                ]
           else
             Sub.none
-        , FileWatch.watcher Change
-        , AnalyserPorts.onFixMessage OnFixMessage
         , case model.stage of
             ContextLoadingStage ->
                 ContextLoader.onLoadedContext OnContext

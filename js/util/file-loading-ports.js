@@ -15,7 +15,7 @@ module.exports = function(app, config, directory) {
         }
     }
 
-    checkedSubscribe('loadContext', function() {
+    checkedSubscribe('loadContext', function(v) {
         const input = fileGatherer.gather(directory);
         var configuration;
         try {

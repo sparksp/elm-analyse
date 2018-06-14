@@ -10,6 +10,8 @@ type alias Report =
     { messages : List Message
     , modules : Analyser.Modules.Modules
     , unusedDependencies : List String
+    , error : Maybe String
+    , success : Bool
     }
 
 

@@ -16,6 +16,7 @@ var args = minimist(process.argv.slice(2), {
 });
 
 (function() {
+    const cwd = process.cwd();
     const elmAnalyseVersion = require(path.join(
         __dirname,
         '../..',
@@ -23,7 +24,7 @@ var args = minimist(process.argv.slice(2), {
     )).version;
     const info = {
         version: elmAnalyseVersion,
-        cwd: process.cwd()
+        cwd: cwd
     };
 
     const elmFormatPath = args['elm-format-path'] || 'elm-format';
@@ -72,7 +73,7 @@ var args = minimist(process.argv.slice(2), {
         process.exit(0);
     }
 
-    const packageFileExists = fs.existsSync('./elm-package.json');
+    const packageFileExists = fs.existsSync('./elm.json');
     if (!packageFileExists) {
         console.log(
             'There is no elm-package.json file in this directory. elm-analyse will only work in directories where such a file is located.'
@@ -80,22 +81,25 @@ var args = minimist(process.argv.slice(2), {
         process.exit(1);
     }
 
-    const elmStuffExists = fs.existsSync('./elm-stuff');
-    if (
-        !elmStuffExists ||
-        !fs.existsSync('./elm-stuff/exact-dependencies.json')
-    ) {
-        console.log(
-            'Cannot detect which packages are installed. Please run `elm-package install` once.'
-        );
-        process.exit(1);
-    }
+    const elmPackage = require(cwd + '/elm.json');
+
+
+    // const elmStuffExists = fs.existsSync('./elm-stuff');
+    // if (
+    //     !elmStuffExists ||
+    //     !fs.existsSync('./elm-stuff/exact-dependencies.json')
+    // ) {
+    //     console.log(
+    //         'Cannot detect which packages are installed. Please run `elm-package install` once.'
+    //     );
+    //     process.exit(1);
+    // }
 
     if (args.serve) {
         var server = require('../server/app.js');
-        server(config, info);
+        server(config, info, elmPackage);
         return;
     }
     var analyser = require('../analyser.js');
-    analyser(config, info);
+    analyser(config, info, elmPackage);
 })();

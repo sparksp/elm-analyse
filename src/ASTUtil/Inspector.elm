@@ -220,7 +220,7 @@ inspectTypeAnnotation config typeAnnotation context =
 
 
 inspectTypeAnnotationInner : Config context -> Ranged TypeAnnotation -> context -> context
-inspectTypeAnnotationInner config ( _, typeRefence ) context =
+inspectTypeAnnotationInner config (( _, typeRefence ) as ta) context =
     case typeRefence of
         Typed _ _ typeArgs ->
             List.foldl (inspectTypeAnnotation config) context typeArgs

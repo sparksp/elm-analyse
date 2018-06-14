@@ -18,8 +18,12 @@ port onFixMessage : (Int -> msg) -> Sub msg
 
 
 sendReport : Report -> Cmd msg
-sendReport =
-    sendReportValue << Report.encode
+sendReport r =
+    let
+        _ =
+            Debug.log "Report" r
+    in
+    sendReportValue <| Report.encode <| r
 
 
 sendStateValue : State -> Cmd msg

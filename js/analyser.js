@@ -5,9 +5,13 @@ const loggingPorts = require('./util/logging-ports');
 const Elm = require('./backend-elm');
 const dependencies = require('./util/dependencies');
 
-module.exports = function(config) {
+module.exports = function(config, info, elmPackage) {
     dependencies.getDependencies(function(registry) {
-        var app = Elm.Analyser.worker({ server: false, registry: registry });
+        var app = Elm.Elm.Analyser.worker({
+            server: false,
+            elmPackage: elmPackage,
+            registry: registry
+        });
 
         app.ports.sendReportValue.subscribe(function(report) {
             const reporter = require('./reporter');
@@ -20,5 +24,7 @@ module.exports = function(config) {
 
         loggingPorts(app, config, directory);
         fileLoadingPorts(app, config, directory);
+
+
     });
 };

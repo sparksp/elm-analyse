@@ -10,11 +10,11 @@ app.use(
     })
 );
 
-module.exports = function(config, info) {
+module.exports = function(config, info, elmPackage) {
     console.log('Elm Analyser server starting with config:');
     console.log(config);
 
-    require('./worker')(config, function(elm) {
+    require('./worker')(config, elmPackage, function(elm) {
         const dashboard = require('./dashboard')(app, elm, expressWs);
 
         require('./watcher')(app, elm);

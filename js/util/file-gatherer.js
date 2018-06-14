@@ -80,24 +80,24 @@ function dependencyFiles(directory, dep, version) {
 }
 
 function gather(directory) {
-    const packageFile = require(directory + '/elm-package.json');
-    const exactDeps = require(directory + '/elm-stuff/exact-dependencies.json');
-    const dependencies = Object.keys(packageFile['dependencies']);
+    const packageFile = require(directory + '/elm.json');
+    // const exactDeps = require(directory + '/elm-stuff/exact-dependencies.json');
+    // const dependencies = Object.keys(packageFile['dependencies']);
 
-    var interfaceFiles = dependencies
-        .filter(x => exactDeps[x])
-        .map(x => [x, exactDeps[x]]);
+    // var interfaceFiles = dependencies
+    //     .filter(x => exactDeps[x])
+    //     .map(x => [x, exactDeps[x]]);
 
-    dependencies.filter(x => !exactDeps[x]).forEach(x => {
-        console.log(
-            'WARN: Missing dependency `' +
-                x +
-                '`. Maybe run elm-package to update the dependencies.'
-        );
-    });
+    // dependencies.filter(x => !exactDeps[x]).forEach(x => {
+    //     console.log(
+    //         'WARN: Missing dependency `' +
+    //             x +
+    //             '`. Maybe run elm-package to update the dependencies.'
+    //     );
+    // });
 
     const input = {
-        interfaceFiles: interfaceFiles,
+        interfaceFiles: [],
         sourceFiles: targetFilesForPathAndPackage(
             directory,
             directory,

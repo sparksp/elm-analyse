@@ -1,6 +1,7 @@
 port module Analyser.ContextLoader exposing (Context, emptyContext, loadContext, onLoadedContext)
 
 import Elm.Dependency exposing (Version)
+import Json.Encode exposing (Value)
 
 
 type alias Context =
@@ -10,7 +11,7 @@ type alias Context =
     }
 
 
-port loadContext : () -> Cmd msg
+port loadContext : Value -> Cmd msg
 
 
 port onLoadedContext : (Context -> msg) -> Sub msg
